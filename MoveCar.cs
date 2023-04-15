@@ -78,7 +78,6 @@ public class MoveCar : MonoBehaviour
         Vector3 relativeVector = transform.InverseTransformPoint(nodes[currentNode].position);
         float newSteer = (relativeVector.x / relativeVector.magnitude) * maxSteerAngle;
         
-        //isBraking = true;
         LeftWheel.steerAngle = newSteer;
         RightWheel.steerAngle = newSteer;
     }
@@ -180,7 +179,6 @@ public class MoveCar : MonoBehaviour
         }
 
         if (isThereObstacle) {
-            //isBraking = true;
             LeftWheel.steerAngle = maxSteerAngle * obstacleAvoidanceMultiplier;
             RightWheel.steerAngle = maxSteerAngle * obstacleAvoidanceMultiplier;
         }
@@ -190,15 +188,11 @@ public class MoveCar : MonoBehaviour
     {
         if (isBraking)
         {
-            //LeftWheel.brakeTorque = 300f;
-            //RightWheel.brakeTorque = 300f;
             LeftRearWheel.brakeTorque = 600f;
             RightRearWheel.brakeTorque = 600f;
         }
         else
         {
-            //LeftWheel.brakeTorque = 0;
-            //RightWheel.brakeTorque = 0;
             LeftRearWheel.brakeTorque = 0;
             RightRearWheel.brakeTorque = 0;
         }
