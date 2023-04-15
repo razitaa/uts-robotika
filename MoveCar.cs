@@ -15,8 +15,12 @@ public class MoveCar : MonoBehaviour
 
     public WheelCollider LeftWheel;
     public WheelCollider RightWheel;
+    public WheelCollider LeftRearWheel;
+    public WheelCollider RightRearWheel;
 
     public float maxSteerAngle = 45f;
+
+    public bool isBraking = false;
 
     public float sensorLength = 10f;
     public Vector3 frontSensorPosition = new Vector3(0f, 0.2f, 0.5f);
@@ -48,15 +52,24 @@ public class MoveCar : MonoBehaviour
     void Update()
     {
         Sensors();
-        CheckWaypointDistance();
         RunSteer();
+        CheckWaypointDistance();
+        Braking();
         MoveWheels();
     }
 
     private void MoveWheels()
     {
-        LeftWheel.motorTorque = 80f;
-        RightWheel.motorTorque = 80f;
+        if (!isBraking)
+        {
+            LeftWheel.motorTorque = 300f;
+            RightWheel.motorTorque = 300f;
+        }
+        else
+        {
+            LeftWheel.motorTorque = 0;
+            RightWheel.motorTorque = 0;
+        }
     }
 
     private void RunSteer()
@@ -64,7 +77,7 @@ public class MoveCar : MonoBehaviour
         if (isThereObstacle) return;
         Vector3 relativeVector = transform.InverseTransformPoint(nodes[currentNode].position);
         float newSteer = (relativeVector.x / relativeVector.magnitude) * maxSteerAngle;
-
+        
         LeftWheel.steerAngle = newSteer;
         RightWheel.steerAngle = newSteer;
     }
@@ -72,7 +85,7 @@ public class MoveCar : MonoBehaviour
     // Will be used to determine car position
     private void CheckWaypointDistance()
     {
-        if (Vector3.Distance(transform.position, nodes[currentNode].position) < 0.2f)
+        if (Vector3.Distance(transform.position, nodes[currentNode].position) < 9f)
         {
             if (currentNode == nodes.Count - 1)
             {
@@ -81,6 +94,16 @@ public class MoveCar : MonoBehaviour
             else{
                 currentNode++;
             }
+        }
+
+        if (Vector3.Distance(transform.position, nodes[currentNode].position) < 6f)
+        {
+            isBraking = true;
+        }
+
+        if (Vector3.Distance(transform.position, nodes[currentNode].position) < 0.5f)
+        {
+            isBraking = false;
         }
     }
 
@@ -108,7 +131,7 @@ public class MoveCar : MonoBehaviour
         {
             if (hit.collider.CompareTag("Terrain"))
             {
-                Debug.DrawLine(sensorStartPosition, hit.point, Color.red);
+                Debug.DrawLine(sensorStartPosition, hit.point, Color.blue);
                 isThereObstacle = true;
                 obstacleAvoidanceMultiplier -= 0.5f;
             }
@@ -129,7 +152,7 @@ public class MoveCar : MonoBehaviour
         {
             if (hit.collider.CompareTag("Terrain"))
             {
-                Debug.DrawLine(sensorStartPosition, hit.point, Color.red);
+                Debug.DrawLine(sensorStartPosition, hit.point, Color.blue);
                 isThereObstacle = true;
                 obstacleAvoidanceMultiplier += 0.5f;
             }
@@ -140,24 +163,38 @@ public class MoveCar : MonoBehaviour
             if (obstacleAvoidanceMultiplier == 0) 
             {
                 if (hit.collider.CompareTag("Terrain"))
-            {
-                Debug.DrawLine(sensorStartPosition, hit.point, Color.red);
-                isThereObstacle = true;
-                if (hit.normal.x < 0)
                 {
-                    obstacleAvoidanceMultiplier = -1f;
+                    Debug.DrawLine(sensorStartPosition, hit.point, Color.yellow);
+                    isThereObstacle = true;
+                    if (hit.normal.x < 0)
+                    {
+                        obstacleAvoidanceMultiplier = 1f;
+                    }   
+                    else
+                    {
+                        obstacleAvoidanceMultiplier = -0.8f;
+                    }
                 }
-                else
-                {
-                    obstacleAvoidanceMultiplier = 1f;
-                }
-            }
             }
         }
 
         if (isThereObstacle) {
             LeftWheel.steerAngle = maxSteerAngle * obstacleAvoidanceMultiplier;
             RightWheel.steerAngle = maxSteerAngle * obstacleAvoidanceMultiplier;
+        }
+    }
+
+    private void Braking()
+    {
+        if (isBraking)
+        {
+            LeftRearWheel.brakeTorque = 600f;
+            RightRearWheel.brakeTorque = 600f;
+        }
+        else
+        {
+            LeftRearWheel.brakeTorque = 0;
+            RightRearWheel.brakeTorque = 0;
         }
     }
 }
